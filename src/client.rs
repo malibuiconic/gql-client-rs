@@ -7,7 +7,7 @@ use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 
 use crate::error::{GraphQLError, GraphQLErrorMessage};
-use crate::ClientConfig;
+use crate::{ClientConfig, GraphQLResponseWithExtensions};
 
 #[derive(Clone, Debug)]
 pub struct GQLClient {
@@ -24,6 +24,7 @@ struct RequestBody<T: Serialize> {
 struct GraphQLResponse<T> {
   data: Option<T>,
   errors: Option<Vec<GraphQLErrorMessage>>,
+  extensions: Option<serde_json::Value>,
 }
 
 impl GQLClient {
@@ -122,9 +123,8 @@ impl GQLClient {
   where
     K: for<'de> Deserialize<'de>,
   {
-    self
-      .query_with_vars_by_endpoint(&self.config.endpoint, query, variables)
-      .await
+    let response = self.query_with_vars_by_endpoint(&self.config.endpoint, query, variables).await?;
+    Ok(response.data)
   }
 
   async fn query_with_vars_by_endpoint<K, T: Serialize>(
@@ -132,7 +132,7 @@ impl GQLClient {
     endpoint: impl AsRef<str>,
     query: &str,
     variables: T,
-  ) -> Result<Option<K>, GraphQLError>
+  ) -> Result<GraphQLResponse<K>, GraphQLError>
   where
     K: for<'de> Deserialize<'de>,
   {
@@ -222,7 +222,23 @@ impl GQLClient {
         log::warn!(target: "gql-client", "The deserialized data is none, the response is: {}", response_body_text);
       }
 
-      return Ok(json.data);
+      return Ok(json);
     }
   }
+
+  pub async fn query_with_extensions<K, T: Serialize>(
+    &self,
+    query: &str,
+    variables: T,
+  ) -> Result<GraphQLResponseWithExtensions<K>, GraphQLError>
+  where 
+    K: for<'de> Deserialize<'de>,
+    {
+      let response = self.query_with_vars_by_endpoint(&self.config.endpoint, query, variables).await?;
+        
+        Ok(GraphQLResponseWithExtensions {
+            data: response.data,
+            extensions: response.extensions,
+        })
+    }
 }

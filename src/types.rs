@@ -60,3 +60,9 @@ impl TryFrom<GQLProxy> for reqwest::Proxy {
     Ok(proxy)
   }
 }
+
+#[derive(Debug)]
+pub struct GraphQLResponseWithExtensions<T> {
+   pub data: Option<T>,
+   pub extensions: Option<serde_json::Value>,
+}
