@@ -1,6 +1,6 @@
 # gql_client
 
-Minimal GraphQL client for Rust
+Minimal GraphQL client for Rust (** With Added Support for Shopify's extenstions metadata! **)
 
 [![Build Status](https://travis-ci.com/arthurkhlghatyan/gql-client-rs.svg?branch=master)](https://travis-ci.com/arthurkhlghatyan/gql-client-rs)
 [![crates.io](https://img.shields.io/crates/v/gql_client.svg)](https://crates.io/crates/gql_client)
